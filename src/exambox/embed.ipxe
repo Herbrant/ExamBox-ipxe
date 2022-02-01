@@ -1,0 +1,20 @@
+#!ipxe
+console -x 1024 -y 768 --picture logo.png --keep
+set menu-timeout 12000
+set menu-default windows
+
+:start
+menu Boot Menu
+item --key w    windows        Microsoft Windows
+item --key e    exambox        Exam-Box NG (PXE Network Boot)
+
+choose --timeout ${menu-timeout} --default ${menu-default} selected || goto ${menu-default}
+goto ${selected}
+
+:exambox
+autoboot
+goto start
+
+:windows
+exit
+goto start

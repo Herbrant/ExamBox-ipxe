@@ -58,7 +58,7 @@ FILE_LICENCE ( GPL2_OR_LATER_OR_UBDL );
 #undef	DOWNLOAD_PROTO_HTTPS	/* Secure Hypertext Transfer Protocol */
 #undef	DOWNLOAD_PROTO_FTP	/* File Transfer Protocol */
 #undef	DOWNLOAD_PROTO_SLAM	/* Scalable Local Area Multicast */
-#undef	DOWNLOAD_PROTO_NFS	/* Network File System Protocol */
+#define	DOWNLOAD_PROTO_NFS	/* Network File System Protocol */
 //#undef DOWNLOAD_PROTO_FILE	/* Local filesystem access */
 
 /*
@@ -152,7 +152,7 @@ FILE_LICENCE ( GPL2_OR_LATER_OR_UBDL );
 //#define PARAM_CMD		/* Form parameter commands */
 //#define NEIGHBOUR_CMD		/* Neighbour management commands */
 //#define PING_CMD		/* Ping command */
-//#define CONSOLE_CMD		/* Console command */
+#define CONSOLE_CMD		/* Console command */
 //#define IPSTAT_CMD		/* IP statistics commands */
 //#define PROFSTAT_CMD		/* Profiling commands */
 //#define NTP_CMD		/* NTP commands */
