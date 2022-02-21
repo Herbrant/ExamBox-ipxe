@@ -29,6 +29,10 @@ FILE_LICENCE ( GPL2_OR_LATER_OR_UBDL );
 #include <ipxe/profile.h>
 #include <ipxe/efi/efi.h>
 #include <ipxe/efi/Protocol/Rng.h>
+#if defined(__i386) || defined(__x86_64)
+#include <ipxe/cpuid.h>
+static char have_hwrnd = 0;
+#endif
 
 /** @file
  *
@@ -142,6 +146,44 @@ static int efi_entropy_tick ( void ) {
 }
 
 /**
+ * Get noise sample from rdrand
+ *
+ * @ret noise          Noise sample
+ * @ret rc             Return status code
+ */
+static int efi_get_noise_rdrand ( noise_sample_t *noise ) {
+#if defined(__i386) || defined(__x86_64)
+       if ( have_hwrnd == 0 ) {
+               struct x86_features features;
+               x86_features( &features );
+               if ( features.intel.ecx & ( 1 << 30 ) ) {
+                       have_hwrnd = 1;
+               } else {
+                       have_hwrnd = 2;
+               }
+               DBGC( &tick, "Have RDRAND: %s\n", ( have_hwrnd == 1 ? "YES!" : "NO :-(" ) );
+       }
+       if ( have_hwrnd == 1 ) {
+               int ret, retries = 10;
+               char ok;
+               while ( --retries > 0 ) {
+                       __asm__ volatile ( "rdrand %0; setc %1" : "=r" ( ret ), "=qm" ( ok ) );
+                       if ( ok ) {
+                               if ( ret == -1 ) {
+                                       /* Assume this is a broken AMD CPU, fall back to TSC */
+                                       ret = profile_timestamp();
+                               }
+                               *noise = ret;
+                               return 0;
+                       }
+               }
+               return -EBUSY;
+       }
+#endif
+    return -ENOTSUP;
+}
+
+/**
  * Get noise sample from timer ticks
  *
  * @ret noise		Noise sample
@@ -228,9 +270,10 @@ static int efi_get_noise ( noise_sample_t *noise ) {
 	int rc;
 
 	/* Try RNG first, falling back to timer ticks */
-	if ( ( ( rc = efi_get_noise_rng ( noise ) ) != 0 ) &&
-	     ( ( rc = efi_get_noise_ticks ( noise ) ) != 0 ) )
-		return rc;
+	if (((rc = efi_get_noise_rng(noise)) != 0) &&
+            ((rc = efi_get_noise_rdrand(noise)) != 0) &&
+             ((rc = efi_get_noise_ticks(noise)) != 0))
+                return rc;
 
 	return 0;
 }
