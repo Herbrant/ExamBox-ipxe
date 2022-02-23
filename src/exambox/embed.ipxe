@@ -16,5 +16,5 @@ autoboot
 goto start
 
 :windows
-exit
+exit 1
 goto start
